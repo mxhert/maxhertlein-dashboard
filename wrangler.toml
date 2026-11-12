@@ -5,5 +5,5 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "maxhertlein-workouts"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "96d4c380-f47a-4f4c-bdcb-deff57162e52"
 migrations_dir = "migrations"
