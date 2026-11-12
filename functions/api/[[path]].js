@@ -5,7 +5,7 @@ const unhex=s=>new Uint8Array((s.match(/.{2}/g)||[]).map(x=>parseInt(x,16)));
 const randomHex=n=>hex(crypto.getRandomValues(new Uint8Array(n)));
 async function sha(s){return hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))}
 async function hashPin(pin,salt){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveBits']);return hex(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:unhex(salt),iterations:ITERATIONS},k,256))}
-function cookie(req){const s=(req.headers.get('cookie')||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('mh_workout_session='));return s?decodeURIComponent(s.slice(19)):''}
+function cookie(req){const s=(req.headers.get('cookie')||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('mh_workout_session='));return s?decodeURIComponent(s.slice(20)):''}
 const setCookie=(v,age=SESSION_SECONDS)=>'mh_workout_session='+encodeURIComponent(v)+'; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age='+age;
 const iso=()=>new Date().toISOString();
 async function session(req,env){const t=cookie(req);if(!t)return false;const h=await sha(t),r=await env.DB.prepare('SELECT expires_at FROM sessions WHERE token_hash=?').bind(h).first();if(!r||r.expires_at<Math.floor(Date.now()/1000)){if(r)await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(h).run();return false}return h}
