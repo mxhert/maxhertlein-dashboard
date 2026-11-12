@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY, expires_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS pin_attempts(ip_hash TEXT PRIMARY KEY, attempts INTEGER NOT NULL, window_start INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS plan_days(id INTEGER PRIMARY KEY AUTOINCREMENT, weekday INTEGER NOT NULL UNIQUE, title TEXT NOT NULL, type TEXT NOT NULL CHECK(type IN ('strength','run')), target_miles REAL, run_type TEXT);
+CREATE TABLE IF NOT EXISTS plan_exercises(id INTEGER PRIMARY KEY AUTOINCREMENT, day_id INTEGER NOT NULL REFERENCES plan_days(id) ON DELETE CASCADE, name TEXT NOT NULL, sort_order INTEGER NOT NULL, target_sets INTEGER NOT NULL, target_reps INTEGER NOT NULL, target_weight REAL NOT NULL DEFAULT 0, weight_increment REAL NOT NULL DEFAULT 5);
+CREATE TABLE IF NOT EXISTS workout_sessions(id INTEGER PRIMARY KEY AUTOINCREMENT, day_id INTEGER NOT NULL REFERENCES plan_days(id), workout_date TEXT NOT NULL, created_at INTEGER NOT NULL, UNIQUE(day_id,workout_date));
+CREATE TABLE IF NOT EXISTS set_logs(id INTEGER PRIMARY KEY AUTOINCREMENT, session_id INTEGER NOT NULL REFERENCES workout_sessions(id) ON DELETE CASCADE, exercise_id INTEGER NOT NULL REFERENCES plan_exercises(id), set_number INTEGER NOT NULL, weight REAL NOT NULL, reps INTEGER NOT NULL, completed_at INTEGER NOT NULL, UNIQUE(session_id,exercise_id,set_number));
+CREATE TABLE IF NOT EXISTS run_logs(session_id INTEGER PRIMARY KEY REFERENCES workout_sessions(id) ON DELETE CASCADE, miles REAL NOT NULL, duration_seconds INTEGER NOT NULL, logged_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_sessions_date ON workout_sessions(workout_date);
