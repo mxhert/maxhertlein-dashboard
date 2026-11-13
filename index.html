@@ -5,7 +5,7 @@
 <title>maxhertlein.com</title><link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon.svg"><link rel="stylesheet" href="/styles.css">
 </head><body><div class="shell">
 <header><a class="brand" href="/"><span class="mark">m.</span> maxhertlein.com</a><div class="head-actions"><button id="theme" class="icon-btn" aria-label="Toggle theme">◐</button></div></header>
-<main>
+<section id="auth-view" class="auth-panel"><h1 id="auth-title">Dashboard</h1><form id="pin-form" class="pin-form"><label id="pin-label" for="pin">PIN</label><input id="pin" type="password" inputmode="numeric" placeholder="PIN" required><button id="pin-submit" class="primary-button">Unlock</button></form><p id="auth-error" class="error-text"></p></section><main id="dashboard-view" class="hidden">
 <section class="section"><div class="section-head"><div></div><div class="actions"><button id="edit" class="plain-btn">Edit links</button><button id="add" class="add-btn">＋ Add link</button></div></div><nav id="categories" class="categories" aria-label="Bookmark categories"></nav><div id="grid" class="bookmark-grid"></div><div id="empty" class="empty hidden">No links</div></section>
 <section class="section"><a class="app-card" href="/workouts/"><div class="app-symbol">↗</div><div class="app-copy"><div class="app-title">Workout tracker</div></div><span class="arrow">↗</span></a></section>
 </main></div>
