@@ -145,6 +145,7 @@ $("#bookmark-form").onsubmit=async e=>{
 };
 $("#cancel").onclick=closeForm;$("#close").onclick=closeForm;$("#editor").onclick=e=>{if(e.target===$("#editor"))closeForm()};
 $("#theme").onclick=()=>theme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+async function loadBuildVersion(){const el=$("#build-version");if(!el)return;try{const v=await api("version");if(v.commit){el.textContent="Build "+v.commit.slice(0,7);el.title=v.commit+(v.branch?" · "+v.branch:"")}else el.textContent="Build version unavailable"}catch{el.textContent="Build version unavailable"}}
 async function start(){
   try{
     const d=await api("bookmarks");
@@ -152,6 +153,6 @@ async function start(){
     render();
   }catch(err){toast(err.message);$("#empty").classList.remove("hidden");$("#empty").textContent="Unable to load bookmarks: "+err.message}
 }
-theme(localStorage.getItem(KEY)||"dark");start();
+theme(localStorage.getItem(KEY)||"dark");start();loadBuildVersion();
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
 window.addEventListener("error",e=>{const el=$("#empty");if(el){el.textContent="Dashboard error: "+(e.message||"Unable to start");el.classList.remove("hidden")}});

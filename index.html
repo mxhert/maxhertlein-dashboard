@@ -7,7 +7,7 @@
 <title>maxhertlein.com</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg">
-<link rel="stylesheet" href="/styles.css?v=20261113d">
+<link rel="stylesheet" href="/styles.css?v=20261113e">
 </head>
 <body>
 <div class="shell">
@@ -17,6 +17,10 @@
   </header>
   <main>
     <section class="section">
+      <form id="google-search" class="google-search" role="search">
+        <span aria-hidden="true" class="search-symbol">⌕</span>
+        <input id="search-query" type="search" placeholder="Search Google" aria-label="Search Google" autocomplete="off">
+      </form>
       <div class="section-head bookmark-toolbar">
         <div class="view-switch" role="group" aria-label="Bookmark device">
           <button id="mobile-view" class="view-tab" type="button">Mobile</button>
@@ -24,10 +28,6 @@
         </div>
         <button id="edit" class="plain-btn" type="button">Edit links</button>
       </div>
-      <form id="google-search" class="google-search" role="search">
-        <span aria-hidden="true" class="search-symbol">⌕</span>
-        <input id="search-query" type="search" placeholder="Search Google" aria-label="Search Google" autocomplete="off">
-      </form>
       <div id="grid" class="bookmark-grid"></div>
       <div id="empty" class="empty hidden">No bookmarks yet</div>
     </section>
@@ -39,6 +39,7 @@
       </a>
     </section>
   </main>
+  <footer class="build-footer"><span id="build-version">Loading version…</span></footer>
 </div>
 <dialog id="pin-dialog">
   <form id="pin-auth-form">
@@ -60,6 +61,6 @@
   </form>
 </dialog>
 <div id="toast" class="toast" role="status"></div>
-<script src="/app.js?v=20261113d" defer></script>
+<script src="/app.js?v=20261113e" defer></script>
 </body>
 </html>

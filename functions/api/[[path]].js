@@ -12,6 +12,8 @@ async function session(req,env){const t=cookie(req);if(!t)return false;const h=a
 async function newSession(env){const t=randomHex(32),h=await sha(t),exp=Math.floor(Date.now()/1000)+SESSION_SECONDS;await env.DB.prepare('INSERT INTO sessions(token_hash,expires_at,created_at) VALUES(?,?,?)').bind(h,exp,iso()).run();return t}
 function validPlan(p){if(!p||!Array.isArray(p.days)||p.days.length>7)return false;const ids=new Set();for(const d of p.days){if(!Number.isInteger(d.day)||d.day<0||d.day>6||!['strength','run','rest'].includes(d.type)||typeof d.title!=='string'||!Array.isArray(d.exercises))return false;for(const e of d.exercises){if(!/^[\w-]{1,100}$/.test(e.id)||ids.has(e.id)||typeof e.name!=='string'||!e.name.trim())return false;ids.add(e.id);if(d.type==='strength'&&(!Number.isFinite(+e.weight)||+e.weight<0||!Number.isInteger(+e.sets)||+e.sets<1||!Number.isInteger(+e.reps)||+e.reps<1||!Number.isFinite(+e.increment)||+e.increment<0))return false;if(d.type==='run'&&(!Number.isFinite(+e.miles)||+e.miles<0))return false}}return true}
 export async function onRequest({request,env}){
+const path=new URL(request.url).pathname.replace(/^\/api\/?/,'').replace(/\/$/,'');
+if(path==='version'&&request.method==='GET')return json({commit:env.CF_PAGES_COMMIT_SHA||'',branch:env.CF_PAGES_BRANCH||''});
 if(!env.DB)return json({error:'Workout database is not configured.'},503);
 const path=new URL(request.url).pathname.replace(/^\/api\/?/,'').replace(/\/$/,'');
 if(request.method!=='GET'){const o=request.headers.get('origin');if(o&&new URL(o).host!==new URL(request.url).host)return json({error:'Invalid request origin.'},403)}

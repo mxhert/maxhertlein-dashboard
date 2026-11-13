@@ -33,3 +33,6 @@
   input,select,textarea,dialog input,dialog select,.google-search input{font-size:16px!important}
   .bookmark-grid.editing .bookmark[data-id]{-webkit-user-select:none;user-select:none}
 }
+
+/* Deployed build identifier */
+.build-footer{justify-content:flex-end;padding:15px 0 22px;font-size:10px;color:var(--subtle)}#build-version{font-variant-numeric:tabular-nums;letter-spacing:.2px}
