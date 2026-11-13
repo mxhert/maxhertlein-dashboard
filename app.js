@@ -1,15 +1,6 @@
 const KEY="mh-dashboard-theme";
-const defaults=[
-{id:"gmail",name:"Gmail",url:"https://mail.google.com",category:"Daily"},
-{id:"calendar",name:"Calendar",url:"https://calendar.google.com",category:"Daily"},
-{id:"youtube",name:"YouTube",url:"https://youtube.com",category:"Daily"},
-{id:"chatgpt",name:"ChatGPT",url:"https://chatgpt.com",category:"Daily"},
-{id:"github",name:"GitHub",url:"https://github.com",category:"Work"},
-{id:"cloudflare",name:"Cloudflare",url:"https://dash.cloudflare.com",category:"Work"},
-{id:"shopify",name:"Shopify",url:"https://admin.shopify.com",category:"Work"},
-{id:"renn",name:"renn.design",url:"https://renn.design",category:"Work"}];
-const $=s=>document.querySelector(s);let links=[],category="All",editing=false,editId=null,timer;
-const host=url=>{try{return new URL(url).hostname.replace(/^www\./,"")}catch{return url}};
+const $=s=>document.querySelector(s);let links=[],category="All",editing=false,editId=null,timer,setupPin=false,editAccessResolver=null;
+const host=url=>{try{return new URL(url).hostname.replace(/^www\\./,"")}catch{return url}};
 const valid=url=>{try{return ["http:","https:"].includes(new URL(url).protocol)}catch{return false}};
 async function api(path,method="GET",body){const r=await fetch("/api/"+path,{method,credentials:"same-origin",headers:{"content-type":"application/json"},...(body===undefined?{}:{body:JSON.stringify(body)})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed");return d}
 async function save(){await api("bookmarks","PUT",links)}
@@ -20,9 +11,14 @@ items.forEach(item=>{const a=document.createElement("a");a.className="bookmark";
 $("#empty").classList.toggle("hidden",items.length>0);$("#edit").textContent=editing?"Done":"Edit links"}
 function openForm(id=null){editId=id;const item=links.find(x=>x.id===id);$("#dialog-title").textContent=item?"Edit link":"Add link";$("#name").value=item?.name||"";$("#url").value=item?.url||"";$("#category").value=item?.category||"Daily";$("#editor").showModal();$("#name").focus()}
 function closeForm(){$("#editor").close();editId=null}
+function finishEditAccess(allowed){$("#pin-dialog").close();const resolve=editAccessResolver;editAccessResolver=null;if(resolve)resolve(allowed)}
+async function ensureEditAccess(){const s=await api("auth/status");if(s.authenticated)return true;setupPin=!s.configured;$("#pin-dialog-title").textContent=setupPin?"Create PIN":"Enter PIN";$("#pin-submit").textContent=setupPin?"Set PIN":"Unlock";$("#pin-input").value="";$("#pin-error").textContent="";$("#pin-dialog").showModal();$("#pin-input").focus();return new Promise(resolve=>{editAccessResolver=resolve})}
 function theme(t){document.documentElement.dataset.theme=t;localStorage.setItem(KEY,t)}
-$("#add").onclick=()=>openForm();$("#edit").onclick=()=>{editing=!editing;render()};
-$("#bookmark-form").onsubmit=async e=>{e.preventDefault();const name=$("#name").value.trim();let url=$("#url").value.trim();if(!/^https?:\/\//i.test(url))url="https://"+url;if(!name||!valid(url)){toast("Enter a valid name and URL");return}const item={id:editId||crypto.randomUUID(),name,url,category:$("#category").value};if(editId)links=links.map(x=>x.id===editId?item:x);else links.push(item);try{await save();category="All";render();closeForm();toast("Saved")}catch(err){toast(err.message)}};
+$("#add").onclick=async()=>{try{if(await ensureEditAccess())openForm()}catch(err){toast(err.message)}};
+$("#edit").onclick=async()=>{if(!editing){try{if(!await ensureEditAccess())return}catch(err){toast(err.message);return}}editing=!editing;render()};
+$("#pin-auth-form").onsubmit=async e=>{e.preventDefault();try{await api(setupPin?"auth/setup":"auth/login","POST",{pin:$("#pin-input").value});finishEditAccess(true)}catch(err){$("#pin-error").textContent=err.message}};
+$("#pin-cancel").onclick=()=>finishEditAccess(false);$("#pin-close").onclick=()=>finishEditAccess(false);$("#pin-dialog").on cancel=e=>{e.preventDefault();finishEditAccess(false)};
+$("#bookmark-form").onsubmit=async e=>{e.preventDefault();const name=$("#name").value.trim();let url=$("#url").value.trim();if(!/^https?:\\/\\//i.test(url))url="https://"+url;if(!name||!valid(url)){toast("Enter a valid name and URL");return}const item={id:editId||crypto.randomUUID(),name,url,category:$("#category").value};if(editId)links=links.map(x=>x.id===editId?item:x);else links.push(item);try{await save();category="All";render();closeForm();toast("Saved")}catch(err){toast(err.message)}};
 $("#cancel").onclick=closeForm;$("#close").onclick=closeForm;$("#editor").onclick=e=>{if(e.target===$("#editor"))closeForm()};$("#theme").onclick=()=>theme(document.documentElement.dataset.theme==="dark"?"light":"dark");
-function auth(setup){$("#auth-view").classList.remove("hidden");$("#dashboard-view").classList.add("hidden");$("#pin-label").textContent=setup?"Create PIN":"PIN";$("#pin-submit").textContent=setup?"Set PIN":"Unlock";$("#pin").value="";$("#auth-error").textContent=""} $("#pin-form").onsubmit=async e=>{e.preventDefault();const setup=$("#pin-submit").textContent==="Set PIN";try{await api(setup?"auth/setup":"auth/login","POST",{pin:$("#pin").value});await loadLinks()}catch(err){$("#auth-error").textContent=err.message}};async function loadLinks(){const d=await api("bookmarks");links=d.bookmarks||[];$("#auth-view").classList.add("hidden");$("#dashboard-view").classList.remove("hidden");render()} async function start(){try{const a=await api("auth/status");if(!a.configured||!a.authenticated)auth(!a.configured);else await loadLinks()}catch(e){$("#auth-error").textContent=e.message}}
+async function start(){try{const d=await api("bookmarks");links=d.bookmarks||[];render()}catch(err){toast(err.message);$("#empty").classList.remove("hidden")}}
 theme(localStorage.getItem(KEY)||"dark");start();if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
