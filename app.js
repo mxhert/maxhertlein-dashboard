@@ -153,6 +153,6 @@ async function start(){
     render();
   }catch(err){toast(err.message);$("#empty").classList.remove("hidden");$("#empty").textContent="Unable to load bookmarks: "+err.message}
 }
-theme(localStorage.getItem(KEY)||"dark");start();loadBuildVersion();
+theme(localStorage.getItem(KEY)||"dark");window.addEventListener("storage",e=>{if(e.key===KEY&&e.newValue)document.documentElement.dataset.theme=e.newValue});start();loadBuildVersion();
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
 window.addEventListener("error",e=>{const el=$("#empty");if(el){el.textContent="Dashboard error: "+(e.message||"Unable to start");el.classList.remove("hidden")}});

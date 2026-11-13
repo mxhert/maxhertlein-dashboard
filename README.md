@@ -14,7 +14,7 @@ The plan is stored in D1, not hardcoded in the UI. Use Plan → Import CSV to re
 
 `day,type,title,exercise,sets,reps,weight,increment,miles,minutes`
 
-One row per exercise. Days Monday through Sunday. Types: strength, run, rest. Strength weight and increment are in pounds. Run distance is miles and planned time is minutes. A rest day can have an empty exercise cell.
+One row per activity. Days Monday through Sunday. Types: strength, run, rest. Strength weight and increment are in pounds. Run distance is miles and planned time is minutes. For a loggable recovery activity, use type `rest` with an activity name and planned minutes, for example `Thursday,rest,Recovery,Walk,,,,,,20` or `Thursday,rest,Recovery,Stretching,,,,,,10`. A rest row with an empty exercise cell creates a generic recovery session.
 
 ## Connect the D1 database
 
