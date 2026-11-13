@@ -1,6 +1,6 @@
 const KEY="mh-dashboard-theme";
 const $=s=>document.querySelector(s);let links=[],category="All",editing=false,editId=null,timer,setupPin=false,editAccessResolver=null;
-const host=url=>{try{return new URL(url).hostname.replace(/^www\\./,"")}catch{return url}};
+const host=url=>{try{return new URL(url).hostname}catch{return url}};
 const valid=url=>{try{return ["http:","https:"].includes(new URL(url).protocol)}catch{return false}};
 async function api(path,method="GET",body){const r=await fetch("/api/"+path,{method,credentials:"same-origin",headers:{"content-type":"application/json"},...(body===undefined?{}:{body:JSON.stringify(body)})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed");return d}
 async function save(){await api("bookmarks","PUT",links)}
@@ -17,8 +17,8 @@ function theme(t){document.documentElement.dataset.theme=t;localStorage.setItem(
 $("#add").onclick=async()=>{try{if(await ensureEditAccess())openForm()}catch(err){toast(err.message)}};
 $("#edit").onclick=async()=>{if(!editing){try{if(!await ensureEditAccess())return}catch(err){toast(err.message);return}}editing=!editing;render()};
 $("#pin-auth-form").onsubmit=async e=>{e.preventDefault();try{await api(setupPin?"auth/setup":"auth/login","POST",{pin:$("#pin-input").value});finishEditAccess(true)}catch(err){$("#pin-error").textContent=err.message}};
-$("#pin-cancel").onclick=()=>finishEditAccess(false);$("#pin-close").onclick=()=>finishEditAccess(false);$("#pin-dialog").on cancel=e=>{e.preventDefault();finishEditAccess(false)};
-$("#bookmark-form").onsubmit=async e=>{e.preventDefault();const name=$("#name").value.trim();let url=$("#url").value.trim();if(!/^https?:\\/\\//i.test(url))url="https://"+url;if(!name||!valid(url)){toast("Enter a valid name and URL");return}const item={id:editId||crypto.randomUUID(),name,url,category:$("#category").value};if(editId)links=links.map(x=>x.id===editId?item:x);else links.push(item);try{await save();category="All";render();closeForm();toast("Saved")}catch(err){toast(err.message)}};
+$("#pin-cancel").onclick=()=>finishEditAccess(false);$("#pin-close").onclick=()=>finishEditAccess(false);$("#pin-dialog").oncancel=e=>{e.preventDefault();finishEditAccess(false)};
+$("#bookmark-form").onsubmit=async e=>{e.preventDefault();const name=$("#name").value.trim();let url=$("#url").value.trim();if(!url.startsWith("http://")&&!url.startsWith("https://"))url="https://"+url;if(!name||!valid(url)){toast("Enter a valid name and URL");return}const item={id:editId||crypto.randomUUID(),name,url,category:$("#category").value};if(editId)links=links.map(x=>x.id===editId?item:x);else links.push(item);try{await save();category="All";render();closeForm();toast("Saved")}catch(err){toast(err.message)}};
 $("#cancel").onclick=closeForm;$("#close").onclick=closeForm;$("#editor").onclick=e=>{if(e.target===$("#editor"))closeForm()};$("#theme").onclick=()=>theme(document.documentElement.dataset.theme==="dark"?"light":"dark");
 async function start(){try{const d=await api("bookmarks");links=d.bookmarks||[];render()}catch(err){toast(err.message);$("#empty").classList.remove("hidden")}}
 theme(localStorage.getItem(KEY)||"dark");start();if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
