@@ -21,7 +21,7 @@ if(path==='auth/setup'&&request.method==='POST'){
     const existing=await env.DB.prepare('SELECT id FROM app_config WHERE id=1').first();
     if(existing)return json({error:'PIN already configured. Please log in.'},409);
     const body=await request.json().catch(()=>({})),pin=String(body.pin??'');
-    if(!/^\\d+$/.test(pin))return json({error:'PIN must contain digits only.'},400);
+    if(!/^\d+$/.test(pin))return json({error:'PIN must contain digits only.'},400);
     const salt=randomHex(16),pinHash=await hashPin(pin,salt);
     await env.DB.prepare('INSERT INTO app_config(id,pin_salt,pin_hash,created_at) VALUES(1,?,?,?)').bind(salt,pinHash,iso()).run();
     const token=await newSession(env);
