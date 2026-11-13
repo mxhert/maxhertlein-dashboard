@@ -15,7 +15,6 @@ export async function onRequest({request,env}){
 const path=new URL(request.url).pathname.replace(/^\/api\/?/,'').replace(/\/$/,'');
 if(path==='version'&&request.method==='GET')return json({commit:env.CF_PAGES_COMMIT_SHA||'',branch:env.CF_PAGES_BRANCH||''});
 if(!env.DB)return json({error:'Workout database is not configured.'},503);
-const path=new URL(request.url).pathname.replace(/^\/api\/?/,'').replace(/\/$/,'');
 if(request.method!=='GET'){const o=request.headers.get('origin');if(o&&new URL(o).host!==new URL(request.url).host)return json({error:'Invalid request origin.'},403)}
 if(path==='auth/status'&&request.method==='GET'){const c=await env.DB.prepare('SELECT id FROM app_config WHERE id=1').first();return json({configured:!!c,authenticated:c?!!(await session(request,env)):false})}
 if(path==='auth/setup'&&request.method==='POST'){
