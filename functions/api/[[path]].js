@@ -1,4 +1,4 @@
-const SESSION_SECONDS=2592000,ITERATIONS=310000;
+const SESSION_SECONDS=2592000,ITERATIONS=100000;
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store',...headers}});
 const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
 const unhex=s=>new Uint8Array((s.match(/.{2}/g)||[]).map(x=>parseInt(x,16)));
