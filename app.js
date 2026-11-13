@@ -18,7 +18,7 @@ function render(){
   $("#desktop-view").setAttribute("aria-pressed",String(category==="Desktop"));
   const items=links.filter(x=>x.category===category),grid=$("#grid");grid.innerHTML="";grid.classList.toggle("editing",editing);
   items.forEach(item=>{
-    const a=document.createElement("a");a.className="bookmark";a.href=item.url;a.target="_blank";a.rel="noopener noreferrer";
+    const a=document.createElement("a");a.className="bookmark";a.dataset.id=item.id;a.draggable=editing;a.href=item.url;a.target="_blank";a.rel="noopener noreferrer";
     const icon=document.createElement("span");icon.className="favicon";icon.textContent=item.name[0].toUpperCase();
     const img=document.createElement("img");img.src="https://www.google.com/s2/favicons?domain="+encodeURIComponent(host(item.url))+"&sz=64";img.alt="";img.onerror=()=>img.remove();img.onload=()=>{icon.textContent="";icon.append(img)};
     const copy=document.createElement("span");copy.className="bookmark-copy";const name=document.createElement("span");name.className="bookmark-name";name.textContent=item.name;copy.append(name);
@@ -47,6 +47,81 @@ async function ensureEditAccess(){
   $("#pin-dialog").showModal();$("#pin-input").focus();
   return new Promise(resolve=>{editAccessResolver=resolve});
 }
+function bookmarkCard(target){return target?.closest?.("#grid .bookmark[data-id]")||null}
+function moveBookmarkCard(source,target,x,y){
+  if(!source||!target||source===target)return;
+  const rect=target.getBoundingClientRect(),before=(y<rect.top+rect.height/2)||(Math.abs(y-(rect.top+rect.height/2))<rect.height*.2&&x<rect.left+rect.width/2);
+  const grid=$("#grid");
+  if(before){if(source!==target.previousElementSibling)grid.insertBefore(source,target)}
+  else if(source!==target.nextElementSibling)grid.insertBefore(source,target.nextElementSibling);
+}
+let mouseDragId=null,touchDrag=null,touchHoldTimer=null;
+async function persistGridOrder(){
+  const grid=$("#grid"),ids=[...grid.querySelectorAll(".bookmark[data-id]")].map(el=>el.dataset.id);
+  const order=new Map(ids.map((id,i)=>[id,i]));
+  const visible=links.filter(x=>x.category===category);
+  if(ids.length!==visible.length)return;
+  const sorted=ids.map(id=>visible.find(x=>x.id===id)).filter(Boolean);
+  if(sorted.length!==visible.length)return;
+  let cursor=0;const next=links.map(x=>x.category===category?sorted[cursor++]:x);
+  if(next.every((x,i)=>x.id===links[i].id))return;
+  const previous=links;links=next;
+  try{await save();toast("Order saved")}
+  catch(error){links=previous;render();toast(error.message)}
+}
+function clearDragState(){
+  $("#grid").querySelectorAll(".bookmark.dragging").forEach(el=>el.classList.remove("dragging"));
+}
+const grid=$("#grid");
+grid.addEventListener("dragstart",e=>{
+  if(!editing)return;
+  const card=bookmarkCard(e.target);if(!card)return;
+  mouseDragId=card.dataset.id;card.classList.add("dragging");
+  if(e.dataTransfer){e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",mouseDragId)}
+});
+grid.addEventListener("dragover",e=>{
+  if(!editing||!mouseDragId)return;
+  const target=bookmarkCard(e.target),source=grid.querySelector('[data-id="'+CSS.escape(mouseDragId)+'"]');
+  if(!target||!source)return;
+  e.preventDefault();moveBookmarkCard(source,target,e.clientX,e.clientY);
+});
+grid.addEventListener("drop",e=>{
+  if(!editing||!mouseDragId)return;
+  e.preventDefault();mouseDragId=null;clearDragState();persistGridOrder();
+});
+grid.addEventListener("dragend",()=>{
+  if(mouseDragId){mouseDragId=null;clearDragState();persistGridOrder()}
+});
+grid.addEventListener("touchstart",e=>{
+  if(!editing||touchDrag)return;
+  const card=bookmarkCard(e.target);if(!card||e.target.closest("button"))return;
+  const touch=e.changedTouches[0];
+  touchDrag={id:card.dataset.id,active:false,x:touch.clientX,y:touch.clientY};
+  touchHoldTimer=setTimeout(()=>{
+    if(!touchDrag)return;
+    touchDrag.active=true;card.classList.add("dragging");
+    if(navigator.vibrate)navigator.vibrate(12);
+  },260);
+},{passive:true});
+document.addEventListener("touchmove",e=>{
+  if(!touchDrag)return;
+  if(!touchDrag.active){
+    const t=e.touches[0];if(Math.hypot(t.clientX-touchDrag.x,t.clientY-touchDrag.y)>10){clearTimeout(touchHoldTimer);touchDrag=null}
+    return;
+  }
+  e.preventDefault();const t=e.touches[0],target=bookmarkCard(document.elementFromPoint(t.clientX,t.clientY));
+  const source=$("#grid").querySelector('[data-id="'+CSS.escape(touchDrag.id)+'"]');
+  if(target&&source)moveBookmarkCard(source,target,t.clientX,t.clientY);
+},{passive:false});
+document.addEventListener("touchend",()=>{
+  if(!touchDrag)return;
+  clearTimeout(touchHoldTimer);const active=touchDrag.active;touchDrag=null;
+  if(active){clearDragState();persistGridOrder()}
+},{passive:true});
+document.addEventListener("touchcancel",()=>{
+  clearTimeout(touchHoldTimer);touchDrag=null;clearDragState();render();
+},{passive:true});
+
 function theme(t){document.documentElement.dataset.theme=t;localStorage.setItem(KEY,t)}
 $("#mobile-view").onclick=()=>{category="Mobile";render()};
 $("#desktop-view").onclick=()=>{category="Desktop";render()};
@@ -73,7 +148,7 @@ $("#theme").onclick=()=>theme(document.documentElement.dataset.theme==="dark"?"l
 async function start(){
   try{
     const d=await api("bookmarks");
-    links=(d.bookmarks||[]).map(x=>({...x,category:x.category==="Daily"?"Mobile":"Desktop"}));
+    links=(d.bookmarks||[]).map(x=>{const value=String(x.category||"").toLowerCase();return {...x,category:value==="daily"||value==="mobile"?"Mobile":"Desktop"}});
     render();
   }catch(err){toast(err.message);$("#empty").classList.remove("hidden");$("#empty").textContent="Unable to load bookmarks: "+err.message}
 }
