@@ -23,3 +23,13 @@
 
 /* Keep search focus from triggering automatic mobile browser zoom. */
 @media(max-width:700px){.google-search input{font-size:16px!important}}
+
+/* Bookmark ordering */
+.bookmark-grid.editing .bookmark[data-id]{cursor:grab}
+.bookmark-grid.editing .bookmark[data-id]:active{cursor:grabbing}
+.bookmark-grid .bookmark.dragging{opacity:.42;transform:scale(.98);border-style:dashed}
+.bookmark-grid.editing{user-select:none;-webkit-user-select:none}
+@media(max-width:700px){
+  input,select,textarea,dialog input,dialog select,.google-search input{font-size:16px!important}
+  .bookmark-grid.editing .bookmark[data-id]{-webkit-user-select:none;user-select:none}
+}
