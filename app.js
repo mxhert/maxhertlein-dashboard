@@ -51,7 +51,6 @@ function theme(t){document.documentElement.dataset.theme=t;localStorage.setItem(
 $("#mobile-view").onclick=()=>{category="Mobile";render()};
 $("#desktop-view").onclick=()=>{category="Desktop";render()};
 $("#google-search").onsubmit=e=>{e.preventDefault();const q=$("#search-query").value.trim();if(q)location.href="https://www.google.com/search?q="+encodeURIComponent(q)};
-$("#add").onclick=async()=>{try{if(await ensureEditAccess())openForm()}catch(err){toast(err.message)}};
 $("#edit").onclick=async()=>{if(!editing){try{if(!await ensureEditAccess())return}catch(err){toast(err.message);return}}editing=!editing;render()};
 $("#pin-auth-form").onsubmit=async e=>{
   e.preventDefault();$("#pin-submit").disabled=true;
