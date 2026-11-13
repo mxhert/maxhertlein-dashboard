@@ -12,7 +12,7 @@ const $=s=>document.querySelector(s);let links=[],category="All",editing=false,e
 const host=url=>{try{return new URL(url).hostname.replace(/^www\./,"")}catch{return url}};
 const valid=url=>{try{return ["http:","https:"].includes(new URL(url).protocol)}catch{return false}};
 async function api(path,method="GET",body){const r=await fetch("/api/"+path,{method,credentials:"same-origin",headers:{"content-type":"application/json"},...(body===undefined?{}:{body:JSON.stringify(body)})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed");return d}
-async function save(){await api("PUT",links)}
+async function save(){await api("bookmarks","PUT",links)}
 function toast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("show");clearTimeout(timer);timer=setTimeout(()=>el.classList.remove("show"),2100)}
 function render(){const cats=["All",...new Set(links.map(x=>x.category||"Other"))],tabs=$("#categories");tabs.innerHTML="";cats.forEach(c=>{const b=document.createElement("button");b.className="category"+(c===category?" active":"");b.textContent=c;b.onclick=()=>{category=c;render()};tabs.append(b)});
 const items=links.filter(x=>category==="All"||x.category===category),grid=$("#grid");grid.innerHTML="";grid.classList.toggle("editing",editing);
